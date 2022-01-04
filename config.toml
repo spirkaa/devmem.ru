@@ -1,0 +1,102 @@
+baseURL      = "https://devmem.ru"
+title        = "Ilya Pavlov"
+languageCode = "ru"
+defaultContentLanguage = "ru"
+theme = "hello-friend-ng"
+
+paginate  = 10
+rssLimit  = 10
+copyright = "<a href='https://creativecommons.org/licenses/by-nc/4.0/' target='_blank' rel='noopener'>CC BY-NC 4.0</a>"
+subtitle  = "DevOps Memories"
+
+canonifyURLs = true
+
+enableRobotsTXT = true
+enableEmoji     = true
+disableRSS     = false
+disableSitemap = false
+disable404     = false
+disableHugoGeneratorInject = false
+
+[permalinks]
+  posts = "/posts/:year/:filename/"
+
+[author]
+  name = "Ilya Pavlov"
+
+[taxonomies]
+  tag      = "tags"
+  category = "categories"
+  series   = "series"
+
+[params]
+  dateform        = "Jan 2, 2006"
+  dateformShort   = "Jan 2"
+  dateformNum     = "02.01.2006"
+  dateformNumTime = "02.01.2006 15:04"
+
+  # Metadata mostly used in document's head
+  # description = ""
+  # keywords = ""
+  # images = [""]
+
+  homeSubtitle = "SysAdmin / DevOps"
+
+  disableReadOtherPosts = false
+  enableThemeToggle = true
+  enableSharingButtons = false
+  justifyContent = false
+
+  [params.footer]
+    trademark = true
+    rss = true
+    copyright = true
+    author = true
+    # topText = [""]
+    # bottomText = [""]
+
+  [params.favicon.color]
+    mask = "#1b1c1d"
+    msapplication = "#1b1c1d"
+    theme = "#1b1c1d"
+
+  [params.logo]
+    logoMark     = "#"
+    logoText     = "/dev/mem"
+    logoHomeLink = "/"
+    logoCursorColor    = "#5468ff"
+
+  [[params.social]]
+    name = "github"
+    url  = "https://github.com/spirkaa"
+
+  [[params.social]]
+    name = "gitlab"
+    url  = "https://gitlab.com/spirkaa"
+
+  [[params.social]]
+    name = "telegram"
+    url  = "https://t.me/spirkaa"
+
+  [[params.social]]
+    name = "email"
+    url  = "mailto:piv@devmem.ru"
+
+[menu]
+  [[menu.main]]
+    identifier = "about"
+    name       = "Обо мне"
+    url        = "about/"
+    weight     = 1
+
+  [[menu.main]]
+    identifier = "projects"
+    name       = "Проекты"
+    url        = "projects/"
+    weight     = 2
+
+  [[menu.main]]
+    identifier = "posts"
+    name       = "Заметки"
+    url        = "posts/"
+    weight     = 3
