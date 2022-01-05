@@ -22,7 +22,7 @@ node {
       sh 'hugo --minify'
     }
     docker.withRegistry('https://registry.home.devmem.ru') {
-      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "-f ./compose/Dockerfile ./public")
+      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "-f ./.docker/Dockerfile ./public")
       myImage.push()
       myImage.push('latest')
       // Untag and remove image by sha256 id
