@@ -1,0 +1,18 @@
+- hosts: all
+  gather_facts: no
+
+  vars:
+    ct_name: devmem-ru
+    ct_image: registry.home.devmem.ru/devmem-ru:{{ lookup('env','GIT_COMMIT') }}
+    ct_host_port: 8088
+
+  tasks:
+    - name: "{{ ct_name }} - start container"
+      docker_container:
+        name: "{{ ct_name }}"
+        image: "{{ ct_image }}"
+        pull: yes
+        ports:
+          - "{{ ct_host_port }}:80"
+        restart_policy: unless-stopped
+        state: started
