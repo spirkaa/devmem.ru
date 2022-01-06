@@ -30,11 +30,12 @@ node {
 
     }
     docker.withRegistry('https://registry.home.devmem.ru') {
-      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "-f ./.docker/Dockerfile .")
+      env.DOCKER_BUILDKIT = 1
+      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "--progress=plain --cache-from registry.home.devmem.ru/devmem-ru:latest -f ./.docker/Dockerfile .")
       myImage.push()
       myImage.push('latest')
       // Untag and remove image by sha256 id
-      sh "docker rmi -f \$(docker inspect -f '{{ .Id }}' ${myImage.id}) peytonyip/nginx-brotli:lite"
+      sh "docker rmi -f \$(docker inspect -f '{{ .Id }}' ${myImage.id})"
     }
   }
 
