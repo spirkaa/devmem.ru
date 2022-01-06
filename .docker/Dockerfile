@@ -1,3 +1,6 @@
-FROM nginx:alpine
+FROM peytonyip/nginx-brotli:lite
 
-ADD . /usr/share/nginx/html
+WORKDIR /app
+
+ADD ./.docker/nginx.conf /etc/nginx/nginx.conf
+ADD ./public .

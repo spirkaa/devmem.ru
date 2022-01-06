@@ -1,0 +1,24 @@
+# General
+.git
+.gitignore
+.gitmodules
+node_modules/
+.env
+Thumbs.db
+.DS_Store
+
+# Hugo
+archetypes/
+content/
+data/
+layouts/
+static/
+themes/
+/config.toml
+
+# Project
+.ansible
+.markdownlint.yaml
+.pre-commit-config.yaml
+Jenkinsfile
+README.md

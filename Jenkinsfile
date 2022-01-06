@@ -20,13 +20,21 @@ node {
   stage('Build') {
     docker.image('klakegg/hugo:ext-alpine-ci').inside {
       sh 'hugo --minify'
+      // Compress assets
+      sh """
+          apk add --update brotli gzip
+          findRegex='.*\\.\\(htm\\|html\\|txt\\|text\\|js\\|css\\|svg\\|xml\\|map\\|json\\)\$'
+          archOpts='-f -k --best'
+          find public -type f -regex \$findRegex -exec gzip \$archOpts {} \\; -exec brotli \$archOpts {} \\;
+      """
+
     }
     docker.withRegistry('https://registry.home.devmem.ru') {
-      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "-f ./.docker/Dockerfile ./public")
+      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "-f ./.docker/Dockerfile .")
       myImage.push()
       myImage.push('latest')
       // Untag and remove image by sha256 id
-      sh "docker rmi -f \$(docker inspect -f '{{ .Id }}' ${myImage.id}) nginx:alpine"
+      sh "docker rmi -f \$(docker inspect -f '{{ .Id }}' ${myImage.id}) peytonyip/nginx-brotli:lite"
     }
   }
 
