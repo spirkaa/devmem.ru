@@ -1,4 +1,14 @@
 node {
+  env.REGISTRY = 'registry.home.devmem.ru'
+  env.IMAGE_NAME = 'devmem-ru'
+  env.HUGO_IMAGE = 'klakegg/hugo:ext-alpine-ci'
+  env.DOCKERFILE = './.docker/Dockerfile'
+  env.ANSIBLE_IMAGE = 'cytopia/ansible:latest-infra'
+  env.ANSIBLE_CONFIG = '.ansible/ansible.cfg'
+  env.ANSIBLE_PLAYBOOK = '.ansible/playbook.yml'
+  env.ANSIBLE_INVENTORY = '.ansible/hosts'
+  env.ANSIBLE_CREDENTIALS_ID = 'jenkins-ssh-key'
+
   stage('Checkout') {
     def scmVars = checkout([
       $class: 'GitSCM',
@@ -14,11 +24,13 @@ node {
       ],
       userRemoteConfigs: scm.userRemoteConfigs
     ])
+
     env.GIT_COMMIT = scmVars.GIT_COMMIT.take(7)
   }
 
   stage('Build') {
-    docker.image('klakegg/hugo:ext-alpine-ci').inside {
+    // Build Hugo site
+    docker.image("${env.HUGO_IMAGE}").inside {
       sh 'hugo --minify'
       // Compress assets
       sh """
@@ -27,11 +39,13 @@ node {
           archOpts='-f -k --best'
           find public -type f -regex \$findRegex -exec gzip \$archOpts {} \\; -exec brotli \$archOpts {} \\;
       """
-
     }
-    docker.withRegistry('https://registry.home.devmem.ru') {
+    // Build image
+    docker.withRegistry("https://${env.REGISTRY}") {
       env.DOCKER_BUILDKIT = 1
-      def myImage = docker.build("devmem-ru:${env.GIT_COMMIT}", "--progress=plain --cache-from registry.home.devmem.ru/devmem-ru:latest -f ./.docker/Dockerfile .")
+      env.CACHE_FROM = "${env.REGISTRY}/${env.IMAGE_NAME}:latest"
+
+      def myImage = docker.build("${env.IMAGE_NAME}:${env.GIT_COMMIT}", "--progress=plain --cache-from ${env.CACHE_FROM} -f ${env.DOCKERFILE} .")
       myImage.push()
       myImage.push('latest')
       // Untag and remove image by sha256 id
@@ -40,13 +54,12 @@ node {
   }
 
   stage('Deploy') {
-    env.ANSIBLE_CONFIG = '.ansible/ansible.cfg'
-    docker.image('cytopia/ansible:latest-infra').inside {
+    docker.image("${env.ANSIBLE_IMAGE}").inside {
       sh 'ansible --version'
       ansiblePlaybook(
-        playbook: '.ansible/playbook.yml',
-        inventory: '.ansible/hosts',
-        credentialsId: 'jenkins-ssh-key',
+        playbook: "${env.ANSIBLE_PLAYBOOK}",
+        inventory: "${env.ANSIBLE_INVENTORY}",
+        credentialsId: "${env.ANSIBLE_CREDENTIALS_ID}",
         colorized: true)
     }
   }
