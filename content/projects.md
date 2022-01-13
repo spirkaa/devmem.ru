@@ -3,6 +3,9 @@ title: "Мои проекты"
 date: 2022-01-04
 ---
 
+1. <https://github.com/spirkaa/devmem.ru> - исходники этого сайта.  \
+_Технологии: Hugo, пайплайн в Jenkins для сборки образа Docker и деплоя с помощью Ansible_
+
 1. <https://github.com/spirkaa/ansible-homelab> - Infrastructure-as-Code для моих серверов.  \
 _Технологии: Proxmox, Docker, Ansible_
 
