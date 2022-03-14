@@ -30,7 +30,9 @@ node {
 
   stage('Build') {
     // Build Hugo site
-    docker.image("${env.HUGO_IMAGE}").inside {
+    image = docker.image("${env.HUGO_IMAGE}")
+    image.pull()
+    image.inside {
       sh 'hugo --minify'
       // Compress assets
       sh """
@@ -54,7 +56,9 @@ node {
   }
 
   stage('Deploy') {
-    docker.image("${env.ANSIBLE_IMAGE}").inside {
+    image = docker.image("${env.ANSIBLE_IMAGE}")
+    image.pull()
+    image.inside {
       sh 'ansible --version'
       ansiblePlaybook(
         playbook: "${env.ANSIBLE_PLAYBOOK}",
