@@ -11,7 +11,7 @@ node {
   env.LABEL_CREATED = sh(script: "date '+%Y-%m-%dT%H:%M:%S%:z'", returnStdout: true).toString().trim()
 
   env.HUGO_IMAGE = 'klakegg/hugo:ext-alpine-ci'
-  env.ANSIBLE_IMAGE = 'cytopia/ansible:latest-infra'
+  env.ANSIBLE_IMAGE = 'git.devmem.ru/cr/ansible:latest'
   env.ANSIBLE_CONFIG = '.ansible/ansible.cfg'
   env.ANSIBLE_PLAYBOOK = '.ansible/playbook.yml'
   env.ANSIBLE_INVENTORY = '.ansible/hosts'
@@ -87,17 +87,19 @@ node {
   }
 
   stage('Deploy') {
-    withCredentials([usernamePassword(credentialsId: "${env.REGISTRY_CREDS_ID}", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
+    docker.withRegistry("https://${env.REGISTRY}", "${env.REGISTRY_CREDS_ID}") {
       image = docker.image("${env.ANSIBLE_IMAGE}")
       image.pull()
       image.inside {
         sh 'ansible --version'
-        ansiblePlaybook(
-          colorized: true,
-          playbook: "${env.ANSIBLE_PLAYBOOK}",
-          inventory: "${env.ANSIBLE_INVENTORY}",
-          credentialsId: "${env.ANSIBLE_CREDS_ID}",
-        )
+        withCredentials([usernamePassword(credentialsId: "${env.REGISTRY_CREDS_ID}", usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
+          ansiblePlaybook(
+            colorized: true,
+            playbook: "${env.ANSIBLE_PLAYBOOK}",
+            inventory: "${env.ANSIBLE_INVENTORY}",
+            credentialsId: "${env.ANSIBLE_CREDS_ID}",
+          )
+        }
       }
     }
   }
