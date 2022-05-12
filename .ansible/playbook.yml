@@ -6,12 +6,10 @@
     ct_registry: "{{ lookup('env','REGISTRY') }}"
     ct_registry_user: "{{ lookup('env','REGISTRY_USER') }}"
     ct_registry_password: "{{ lookup('env','REGISTRY_PASSWORD') }}"
-    ct_image_owner: "{{ lookup('env','IMAGE_OWNER') }}"
-    ct_name: "{{ lookup('env','IMAGE_NAME') }}"
-    ct_tag: "{{ lookup('env','GIT_COMMIT') }}"
 
-    ct_image: "{{ ct_registry }}/{{ ct_image_owner }}/{{ ct_name }}:{{ ct_tag }}"
+    ct_image: "{{ lookup('env','IMAGE_FULLNAME') }}:{{ lookup('env','REVISION') }}"
     ct_port: 8088
+    ct_name: devmem-ru
 
   tasks:
     - name: "{{ ct_name }} - log into registry"
