@@ -5,6 +5,7 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '10', daysToKeepStr: '60'))
     parallelsAlwaysFailFast()
     disableConcurrentBuilds()
+    skipDefaultCheckout true
   }
 
   environment {
@@ -20,10 +21,13 @@ pipeline {
     LABEL_DESCRIPTION = 'My Hugo site'
     LABEL_URL = 'https://devmem.ru'
     LABEL_CREATED = sh(script: "date '+%Y-%m-%dT%H:%M:%S%:z'", returnStdout: true).toString().trim()
-    REVISION = GIT_COMMIT.take(7)
+
+    GPG_KEY_CREDS_ID = 'jenkins-gpg-key'
+    HELM_CHART_GIT_URL = 'https://git.devmem.ru/projects/helm-charts.git'
 
     HUGO_IMAGE = 'klakegg/hugo:ext-alpine-ci'
-    ANSIBLE_IMAGE = "${REGISTRY}/projects/ansible:base"
+
+    ANSIBLE_IMAGE = "${REGISTRY}/${IMAGE_OWNER}/ansible:base"
     ANSIBLE_CONFIG = '.ansible/ansible.cfg'
     ANSIBLE_PLAYBOOK = '.ansible/playbook.yml'
     ANSIBLE_INVENTORY = '.ansible/hosts'
@@ -31,42 +35,62 @@ pipeline {
   }
 
   parameters {
+    booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Deploy this revision?')
     string(name: 'ANSIBLE_EXTRAS', defaultValue: '', description: 'ansible-playbook extra params')
   }
 
   stages {
     stage('Checkout') {
+      when {
+        branch 'main'
+        not {
+          changeRequest()
+        }
+      }
       steps {
-        checkout([
-          $class: 'GitSCM',
-          branches: scm.branches,
-          extensions: scm.extensions + [
-            [$class: 'SubmoduleOption',
-              disableSubmodules: false,
-              parentCredentials: false,
-              recursiveSubmodules: true,
-              trackingSubmodules: true,
-              reference: ''
-            ]
-          ],
-          userRemoteConfigs: scm.userRemoteConfigs
-        ])
+        script {
+          def scmVars = checkout([
+            $class: 'GitSCM',
+            branches: scm.branches,
+            extensions: scm.extensions + [
+              [$class: 'SubmoduleOption',
+                disableSubmodules: false,
+                parentCredentials: false,
+                recursiveSubmodules: true,
+                trackingSubmodules: true,
+                reference: ''
+              ]
+            ],
+            userRemoteConfigs: scm.userRemoteConfigs
+          ])
+          env.REVISION = scmVars.GIT_COMMIT.take(7)
+          env.GIT_URL = scmVars.GIT_URL
+        }
       }
     }
 
     stage('Build assets') {
+      when {
+        branch 'main'
+        not {
+          anyOf {
+            changeRequest()
+            expression { params.DEPLOY }
+          }
+        }
+      }
       steps {
         script {
-          image = docker.image("${HUGO_IMAGE}")
-          image.pull()
-          image.inside {
-            sh 'hugo --minify'
-            sh """
-                apk add --update brotli gzip
-                findRegex='.*\\.\\(htm\\|html\\|txt\\|text\\|js\\|css\\|svg\\|xml\\|map\\|json\\)\$'
-                archOpts='-f -k --best'
-                find public -type f -regex \$findRegex -exec gzip \$archOpts {} \\; -exec brotli \$archOpts {} \\;
-            """
+          image = docker.image("${HUGO_IMAGE}").inside {
+            sh '''
+              hugo --minify
+              apk add --update brotli gzip
+              findRegex='.*\\.\\(htm\\|html\\|txt\\|text\\|js\\|css\\|svg\\|xml\\|map\\|json\\)$'
+              archOpts='-f -k --best'
+              find public -type f -regex $findRegex \
+                -exec gzip $archOpts {} \\; \
+                -exec brotli $archOpts {} \\;
+            '''
           }
         }
       }
@@ -78,6 +102,15 @@ pipeline {
     }
 
     stage('Build image') {
+      when {
+        branch 'main'
+        not {
+          anyOf {
+            changeRequest()
+            expression { params.DEPLOY }
+          }
+        }
+      }
       steps {
         script {
           buildDockerImage(
@@ -85,6 +118,23 @@ pipeline {
             tag: "${REVISION}",
             altTag: 'latest'
           )
+        }
+      }
+    }
+
+    stage('Bump Helm chart version') {
+      when {
+        branch 'main'
+        not {
+          anyOf {
+            changeRequest()
+            expression { params.DEPLOY }
+          }
+        }
+      }
+      steps {
+        script {
+          bumpHelmChartVersion()
         }
       }
     }
@@ -98,6 +148,11 @@ pipeline {
           alwaysPull true
           reuseNode true
         }
+      }
+      when {
+        branch 'main'
+        beforeAgent true
+        expression { params.DEPLOY }
       }
       steps {
         sh 'ansible --version'
