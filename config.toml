@@ -40,7 +40,7 @@ disableHugoGeneratorInject = false
   # keywords = ""
   # images = [""]
 
-  homeSubtitle = "SysAdmin / DevOps"
+  homeSubtitle = "DevOps / SysAdmin"
 
   disableReadOtherPosts = false
   enableThemeToggle = true
@@ -73,6 +73,10 @@ disableHugoGeneratorInject = false
   [[params.social]]
     name = "gitlab"
     url  = "https://gitlab.com/spirkaa"
+
+  [[params.social]]
+    name = "linkedin"
+    url  = "https://www.linkedin.com/in/ilya-v-pavlov/"
 
   [[params.social]]
     name = "telegram"
