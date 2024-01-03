@@ -35,11 +35,6 @@ disableHugoGeneratorInject = false
   dateformNum     = "02.01.2006"
   dateformNumTime = "02.01.2006 15:04"
 
-  # Metadata mostly used in document's head
-  # description = ""
-  # keywords = ""
-  # images = [""]
-
   homeSubtitle = "DevOps / SysAdmin"
 
   disableReadOtherPosts = false
@@ -48,12 +43,10 @@ disableHugoGeneratorInject = false
   justifyContent = false
 
   [params.footer]
-    trademark = true
+    trademark = 2024
     rss = true
     copyright = true
     author = true
-    # topText = [""]
-    # bottomText = [""]
 
   [params.favicon.color]
     mask = "#1b1c1d"
